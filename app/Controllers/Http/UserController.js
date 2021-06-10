@@ -154,8 +154,8 @@ class UserController {
 
     //logout User
 
-  async logout({ request, response, auth }) {
-    const refreshToken = request.input("refreshToken");
+  async logout({ request, response, auth , params}) {
+    const refreshToken = params.refreshToken
     if (!refreshToken) {
       // You can throw any exception you want here
       throw BadRequestException.invoke(`Refresh Token missing`);
@@ -192,12 +192,13 @@ class UserController {
 
       await Mail.send('emails.recover', {user, token}, (message) => {
         message
-        .from('adilmeman94@gmail.com')
+        .from('adil.meman@upstrapp.com')
         .to(email)
       })
-      return response.status(200).json({
-            message: "Success",
-          });
+      return user
+      // response.status(200).json({
+      //       message: "Success",
+      //     });
 
     } catch (error) {
       console.log(error.message);
@@ -206,6 +207,42 @@ class UserController {
         message: error.message,
       });
     }
+  }
+
+  /* reset password from mail link  */
+
+  async resetPassword({request, response, params}) {
+    const mailToken = params.token
+    const mailEmail = params.email
+
+    const newPassword  = request.input("newPassword");
+
+    const user = await User.findByOrFail('email', mailEmail)
+
+    //check token is same or not
+    const sameToken = mailToken === user.token
+    if(!sameToken) {
+      return response.status(401).json({
+        message: "Old token provided or token already used"
+      })
+
+    }
+    //check token is expired or not
+    const expiredToken = moment()
+      .subtract(2, 'days')
+      .isAfter(user.token_created_at)
+     if(expiredToken) {
+       return response.status.status(401).json({
+         message: "Token expired"
+       })
+     }
+
+    user.password = newPassword
+    user.token = null
+    user.token_creeated_at = 0
+    await user.save()
+
+
   }
 }
 
