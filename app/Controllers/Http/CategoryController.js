@@ -9,21 +9,22 @@ class CategoryController {
   async createCategory({ request, auth, response }) {
     try {
       await auth.check();
-      const { name, description, icon } = request.post();
+      const { name, description, icon, parent_id } = request.all();
       const categoryExists = await Category.findBy("name", name);
       if (categoryExists) {
         return response.status(400).send({
           status: "error",
-          message: `category ${category.name} is already existed`,
+          message: `category is already existed`,
         });
       }
       const category = new Category();
       category.name = name;
       category.description = description;
       category.icon = icon;
+      category.parent_id = parent_id;
       await category.save();
       return response.status(201).json({
-        message: `category ${category.name} is Created Successfull`,
+        message: `category ${category.name} is Created Successfully`,
         data: category,
       });
     } catch (error) {
@@ -52,20 +53,13 @@ class CategoryController {
   async categoryById({ request, auth, response, params }) {
     try {
       await auth.check();
-      const id = params._id;
-      const categoryById = await Category.findBy("id", id);
-      if (!categoryById) {
-        return response.status(400).send({
-          status: "error",
-          message: `category ${category.name} is not existed`,
-        });
-      }
-      return categoryById;
+      const id = params.id;
+      const category = await Category.findOrFail(id);
+      return category;
     } catch (error) {
-      console.log(error.message);
-      response.status(403).json({
+      return response.status(400).send({
         status: "error",
-        message: error.message,
+        message: `category is not exist`,
       });
     }
   }
@@ -73,39 +67,42 @@ class CategoryController {
   async editCategory({ request, auth, response, params }) {
     try {
       await auth.check();
-      const id = params._id;
-      const categoryById = await Category.findBy("id", id);
+      const id = params.id;
+      const category = await Category.findBy("_id", id);
+      if (!category) {
+        return response.status(400).send({
+          status: "error",
+          message: `category is not exist`,
+        });
+      }
 
       const { name, description, icon } = request.all();
-
-      const category = await categoryById;
-      category.name = name || category.name;
-      category.description = description || category.description;
-      category.icon = icon || category.icon;
-
+      category.name = name;
+      category.description = description;
+      category.icon = icon;
       await category.save();
       return response.status(200).send(category);
     } catch (error) {
-      return response.status(500).send(error);
+      return response.status(400).send({
+        status: "error",
+        message: `category is not exist`,
+      });
     }
   }
 
   async deleteCategory({ request, auth, response, params }) {
     try {
       await auth.check();
-      const id = params._id;
-      const categoryById = await Category.findBy("id", id);
-      const category = await categoryById;
+      const id = params.id;
+      const category = await Category.findBy("_id", id);
       await category.delete();
-
       return response.status(201).json({
         message: `category ${category.name} is deleted Successfull`,
       });
     } catch (error) {
-      console.log(error.message);
-      response.status(403).json({
+      response.status(400).send({
         status: "error",
-        message: error.message,
+        message: `category is not exist`,
       });
     }
   }
