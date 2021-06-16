@@ -1,21 +1,24 @@
 "use strict";
 
 const Category = use("App/Models/Category");
+const { validateAll } = use("Validator");
 
 /**
  * Resourceful controller for interacting with categories
  */
 class CategoryController {
-  async createCategory({ request, auth, response }) {
+  async createCategory({ request, response }) {
     try {
-      await auth.check();
       const { name, description, icon, parent_id } = request.all();
-      const categoryExists = await Category.findBy("name", name);
-      if (categoryExists) {
+
+      if (parent_id) {
+        const categoryInstance = await Category.findBy("_id", parent_id);
+      if (!categoryInstance) {
         return response.status(400).send({
           status: "error",
-          message: `category is already existed`,
+          message: `Invalid parent ID`,
         });
+      }
       }
       const category = new Category();
       category.name = name;
@@ -36,11 +39,11 @@ class CategoryController {
     }
   }
 
-  async listCategory({ request, auth, response }) {
+  async listCategory({ request, response }) {
     try {
-      await auth.check();
-      const categories = await Category.all();
-      return categories;
+      const { parent_id } = request.get();
+      const categories = Category.query().where('parent_id', parent_id)
+      return await categories.fetch()
     } catch (error) {
       console.log(error.message);
       response.status(403).json({
@@ -50,9 +53,8 @@ class CategoryController {
     }
   }
 
-  async categoryById({ request, auth, response, params }) {
+  async categoryById({ request, response, params }) {
     try {
-      await auth.check();
       const id = params.id;
       const category = await Category.findOrFail(id);
       return category;
@@ -64,9 +66,9 @@ class CategoryController {
     }
   }
 
-  async editCategory({ request, auth, response, params }) {
+  async editCategory({ request, response, params }) {
     try {
-      await auth.check();
+
       const id = params.id;
       const category = await Category.findBy("_id", id);
       if (!category) {
@@ -75,24 +77,33 @@ class CategoryController {
           message: `category is not exist`,
         });
       }
+      if (parent_id) {
+        const categoryInstance = await Category.findBy("_id", parent_id);
+      if (!categoryInstance) {
+        return response.status(400).send({
+          status: "error",
+          message: `Invalid parent ID`,
+        });
+      }
+      }
 
-      const { name, description, icon } = request.all();
+      const { name, description, icon, parent_id } = request.all();
       category.name = name;
       category.description = description;
       category.icon = icon;
+      category.parent_id = parent_id
       await category.save();
       return response.status(200).send(category);
     } catch (error) {
       return response.status(400).send({
         status: "error",
-        message: `category is not exist`,
+        message: error.message,
       });
     }
   }
 
-  async deleteCategory({ request, auth, response, params }) {
+  async deleteCategory({ request, response, params }) {
     try {
-      await auth.check();
       const id = params.id;
       const category = await Category.findBy("_id", id);
       await category.delete();

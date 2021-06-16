@@ -66,11 +66,13 @@ module.exports = {
   |
   */
   jwt: {
-    serializer: 'lucid',
+    serializer: 'LucidMongo',
     model: 'App/Models/User',
+    token: 'App/Models/Token',
     scheme: 'jwt',
     uid: 'email',
     password: 'password',
+    expiry: '1200m',
     options: {
       secret: Env.get('APP_KEY')
     }

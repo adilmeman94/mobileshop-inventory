@@ -1,35 +1,23 @@
 "use strict";
 
 const Hash = use("Hash");
-// const { validateAll } = use('Validator');
+const { validateAll } = use("Validator");
 const User = use("App/Models/User");
-const Mail = use('Mail')
+const Mail = use("Mail");
 
-const moment = require('moment')
-const crypto = require('crypto')
-
+const moment = require("moment");
+const crypto = require("crypto");
 
 class UserController {
+  /* register newUser */
 
-  //register User
-  async register({ request, auth, response }) {
+  async register({ request, response }) {
     try {
-      const email = request.input("email");
-      const password = request.input("password");
-      const firstName = request.input("firstName");
-      const lastName = request.input("lastName");
-      const userExists = await User.findBy("email", email);
-      if (userExists) {
-        return response.status(400).send({
-          status: "error",
-          message: "User already registered",
-        });
-      }
       let user = new User();
-      user.email = email;
-      user.password = password;
-      user.firstName = firstName;
-      user.lastName = lastName;
+      user.email = request.input("email");
+      user.password = request.input("password");
+      user.firstName = request.input("firstName");
+      user.lastName = request.input("lastName");
       let success = await user.save();
       return response.status(201).json({
         status: "ok",
@@ -38,7 +26,7 @@ class UserController {
         UserID: user["_id"],
       });
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
       response.status(403).json({
         status: "error",
         debug_error: error.message,
@@ -46,23 +34,21 @@ class UserController {
     }
   }
 
-  //login User
+  /* login User  */
 
   async login({ request, auth, response }) {
     const email = request.input("email");
     const password = request.input("password");
+
     try {
       let token = await auth.withRefreshToken().attempt(email, password);
-      const user = await User.findBy({email})
+      const user = await User.findBy({ email });
 
-      // await auth.login(user)
-      // const userInfo = auth.user;
       return response.status(200).json({
         status: "ok",
         message: "User Logged in",
         token: token,
         userInfo: user,
-       // user:user
       });
     } catch (error) {
       console.log(error.message);
@@ -73,7 +59,7 @@ class UserController {
     }
   }
 
-    //view user profile
+  /* view user profile  */
 
   async profile({ request, auth, response }) {
     try {
@@ -87,20 +73,12 @@ class UserController {
     }
   }
 
-  //update user profile
+  /* update user profile  */
 
-  async updateProfile({ auth, request, response }) {
+  async updateProfile({ request, auth, response }) {
     try {
-      const { firstName, lastName , email} = request.all();
-      // const rules = {
-      //   firstName: "required",
-      //   lastName: "required",
-      //   email: "required|emial|unique:users,email"
-      // };
-      // const validation = await validateAll(request.all(), rules);
-      // if (validation.fails()) {
-      //   return response.status(400).send(validation.messages());
-      // }
+      const { firstName, lastName, email } = request.all();
+
       const user = await auth.user;
       user.firstName = firstName;
       user.lastName = lastName;
@@ -108,16 +86,15 @@ class UserController {
       await user.save();
       return response.status(200).send(user);
     } catch (error) {
-      return response.status(500).send(error);
+      return response.status(500).send(error.message);
     }
   }
 
-  //change password of User
+  /* change password of User  */
 
   async changePassword({ request, auth, response }) {
-    const oldPassword = request.input("oldPassword");
-    const newPassword = request.input("newPassword");
-    const confirmPassword = request.input("confirmPassword");
+    const { oldPassword, newPassword, confirmPassword } = request.all();
+
     try {
       let user = await auth.getUser();
       if (!user) {
@@ -140,7 +117,8 @@ class UserController {
       } else {
         response.status(400).send({
           status: "error",
-          message: "password is not updated",
+          message:
+            "oldpassword is wrong or newpassword and confirmpassword are mismatched",
         });
       }
     } catch (error) {
@@ -152,10 +130,10 @@ class UserController {
     }
   }
 
-    //logout User
+  /*  logout User  */
 
-  async logout({ request, response, auth , params}) {
-    const refreshToken = params.refreshToken
+  async logout({ request, auth, response, params }) {
+    const refreshToken = params.refreshToken;
     if (!refreshToken) {
       // You can throw any exception you want here
       throw BadRequestException.invoke(`Refresh Token missing`);
@@ -166,9 +144,10 @@ class UserController {
     return response.send({ status: 200, message: "success" });
   }
 
-  async list({ request, auth, response }) {
+  /*  view UserList  */
+
+  async list({ request, response }) {
     try {
-      await auth.check();
       const users = await User.all();
       return users;
     } catch (error) {
@@ -180,26 +159,33 @@ class UserController {
     }
   }
 
-  async forgotPassword({request, response}) {
+  /*  forgot password  */
+
+  async forgotPassword({ request, response }) {
     try {
-      const { email } = request.only(['email'])
-      const user = await User.findByOrFail('email', email)
-      const token = await crypto.randomBytes(10).toString('hex')
-      user.token_created_at = new Date()
-      user.token = token
+      const rules = {
+        email: "required|email",
+      };
 
-      await user.save()
+      const validation = await validateAll(request.all(), rules);
+      if (validation.fails()) {
+        return response.status(400).send(validation.messages());
+      }
+      const { email } = request.only(["email"]);
+      const user = await User.findByOrFail("email", email);
+      const token = await crypto.randomBytes(10).toString("hex");
+      user.token_created_at = new Date();
+      user.token = token;
 
-      await Mail.send('emails.recover', {user, token}, (message) => {
-        message
-        .from('adil.meman@upstrapp.com')
-        .to(email)
-      })
-      return user
+      await user.save();
+
+      await Mail.send("emails.recover", { user, token }, (message) => {
+        message.from("adil.meman@upstrapp.com").to(email);
+      });
+      return user;
       // response.status(200).json({
       //       message: "Success",
       //     });
-
     } catch (error) {
       console.log(error.message);
       response.status(403).json({
@@ -211,38 +197,52 @@ class UserController {
 
   /* reset password from mail link  */
 
-  async resetPassword({request, response, params}) {
-    const mailToken = params.token
-    const mailEmail = params.email
+  async resetPassword({ request, response, params }) {
+    const mailToken = params.token;
+    const mailEmail = params.email;
 
-    const newPassword  = request.input("newPassword");
+    const rules = {
+      newPassword: "required|min:6|max:18",
+      confirmPassword: "required|min:6|max:18",
+    };
 
-    const user = await User.findByOrFail('email', mailEmail)
+    const validation = await validateAll(request.all(), rules);
+    if (validation.fails()) {
+      return response.status(400).send(validation.messages());
+    }
+
+    const newPassword = request.input("newPassword");
+    const confirmPassword = request.input("confirmPassword");
+
+    const user = await User.findByOrFail("email", mailEmail);
 
     //check token is same or not
-    const sameToken = mailToken === user.token
-    if(!sameToken) {
+    const sameToken = mailToken === user.token;
+    if (!sameToken) {
       return response.status(401).json({
-        message: "Old token provided or token already used"
-      })
-
+        message: "Old token provided or token already used",
+      });
     }
     //check token is expired or not
     const expiredToken = moment()
-      .subtract(2, 'days')
-      .isAfter(user.token_created_at)
-     if(expiredToken) {
-       return response.status.status(401).json({
-         message: "Token expired"
-       })
-     }
-
-    user.password = newPassword
-    user.token = null
-    user.token_creeated_at = 0
-    await user.save()
-
-
+      .subtract(2, "days")
+      .isAfter(user.token_created_at);
+    if (expiredToken) {
+      return response.status.status(401).json({
+        message: "Token expired",
+      });
+    }
+    if (newPassword === confirmPassword) {
+      user.password = newPassword;
+      user.token = null;
+      user.token_creeated_at = 0;
+    } else {
+      response.status(400).send({
+        status: "error",
+        message: "newPassword and confirmPassword must be same",
+      });
+    }
+    await user.save();
   }
 }
 
