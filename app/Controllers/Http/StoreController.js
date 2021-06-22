@@ -11,17 +11,26 @@ const Store = use('App/Models/Store')
  */
 class StoreController {
   async createStore({ request, response }) {
+    const { storeName, storeAddress, storeManagerName, storeMobile, storeStatus, storeLogo} = request.all();
     try {
-
-      const { storeName } = request.all();
       const storeExists = await Store.findBy("storeName", storeName);
       if (storeExists) {
         return response.status(400).send({
           status: "error",
-          message: `store is already exist`,
+          message: `store was already registered, create with another name`,
         });
       }
-      const store = await Store.create(request.all());
+
+      const store = new Store()
+      store.storeName = storeName;
+      store.storeAddress = storeAddress;
+      store.storeManagerName = storeManagerName;
+      store.storeMobile = storeMobile;
+      store.storeStatus = storeStatus;
+      store.storeLogo = storeLogo;
+      await store.save()
+
+      // const store = await Store.create(request.all());
       return response.status(201).json({
         message: `store ${store.storeName} is Created Successfully`,
         data: store,
@@ -87,7 +96,7 @@ class StoreController {
     } catch (error) {
       return response.status(400).send({
         status: "error",
-        message: `store is not exist`,
+        message: error.message,
       });
     }
   }

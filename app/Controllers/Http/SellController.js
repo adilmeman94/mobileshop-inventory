@@ -1,6 +1,8 @@
 'use strict'
 
 const Sell = use("App/Models/Sell");
+const Products = use("App/Models/Product")
+const Store = use('App/Models/Store')
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
@@ -12,29 +14,17 @@ const Sell = use("App/Models/Sell");
 class SellController {
   async createSell({ request, response }) {
     try {
-    const {  sellDate, customerName, customerMobile, productDetail, billAmount} = request.all();
+    const {  sellDate, customerName, customerMobile, productDetail, billAmount, storeId} = request.all();
 
-    let sell = new Sell();
+    const sell = new Sell();
     sell.sellDate = sellDate;
     sell.customerName = customerName;
     sell.customerMobile = customerMobile;
     sell.productDetail = productDetail;
     sell.billAmount = billAmount;
+    sell.storeId = storeId
+    await sell.save()
 
-    // if(!typeof productDetail === "array" && productdetail == null) {
-    //   return response.status(201).json({
-    //     message: `productDetail must be as object and not null`,
-    //   });
-    // }
-
-    if (!sell.productDetail.productId && sell.productDetail.productQuantity && sell.productDetail.productprice) {
-      return response.status(201).json({
-        message: `productId, productQuantity and productDetail not be null`,
-      });
-    }
-
-
-      // const sell = await Sell.create(request.all());
       return response.status(201).json({
         message: `sellRecord of  ${sell.customerName} is Created Successfully`,
         data: sell,
@@ -87,13 +77,14 @@ class SellController {
         });
       }
 
-      const {  sellDate, customerName, customerMobile, productDetail, billAmount} = request.all();
+      const {  sellDate, customerName, customerMobile, productDetail, billAmount, storeId} = request.all();
 
       sell.sellDate = sellDate;
       sell.customerName = customerName;
       sell.customerMobile = customerMobile;
       sell.productDetail = productDetail;
       sell.billAmount = billAmount;
+      sell.storeId = storeId;
 
 
       await sell.save();
@@ -113,7 +104,7 @@ class SellController {
       const sell = await Sell.findBy("_id", id);
       await sell.delete();
       return response.status(201).json({
-        message: `sellRecord of ${sell.Name} is deleted Successfull`,
+        message: `sellRecord of ${sell.customerName} is deleted Successfull`,
       });
     } catch (error) {
       response.status(400).send({
@@ -122,6 +113,39 @@ class SellController {
       });
     }
   }
+
+  async createInvoice ({ request,response, params}) {
+    try {
+      const id = params.id;
+      const sell = await Sell.findBy("_id", id);
+      if (!sell) {
+        return response.status(400).send({
+          status: "error",
+          message: `sellRecord is not exist`,
+        });
+      }
+       const sell1 = sell.toJSON();
+      // const sell2 = sell.with("products").fetch();
+      const products = [];
+      const stores = []
+      for (const item of sell.productDetail) {
+        let product = await Products.findBy("_id", item.productId);
+        products.push(product);
+      }
+      sell1.products = products;
+      const store = await Store.findBy("_id", sell.storeId)
+      stores.push(store)
+      sell1.stores = stores
+      return sell1;
+    } catch (error) {
+      response.status(400).send({
+        status: "error",
+        message: error.message
+      })
+    }
+  }
+
+
 }
 
 module.exports = SellController

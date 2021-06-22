@@ -61,18 +61,27 @@ Route.put('/complaints/:id', 'ComplaintController.editComplaint').middleware('au
 Route.delete('/complaints/:id', 'ComplaintController.deleteComplaint').middleware('auth')
 
 /* purchase Routes */
-Route.post('/purchases', 'PurchaseController.createPurchase').middleware('auth')
+Route.post('/purchases', 'PurchaseController.createPurchase').middleware('auth').validator('PurchaseValidator/ValidatePurchase')
 Route.get('/purchases', 'PurchaseController.listPurchase').middleware('auth')
 Route.get('/purchases/:id', 'PurchaseController.purchaseById').middleware('auth')
-Route.put('/purchases/:id', 'PurchaseController.editPurchase').middleware('auth')
+Route.put('/purchases/:id', 'PurchaseController.editPurchase').middleware('auth').validator('PurchaseValidator/ValidatePurchase')
 Route.delete('/purchases/:id', 'PurchaseController.deletePurchase').middleware('auth')
 
 /* sell Routes */
-Route.post('/sells', 'SellController.createSell').middleware('auth')
+Route.post('/sells', 'SellController.createSell').middleware('auth').validator('SellValidator/ValidateSell')
 Route.get('/sells', 'SellController.listSell').middleware('auth')
 Route.get('/sells/:id', 'SellController.sellById').middleware('auth')
-Route.put('/sells/:id', 'SellController.editSell').middleware('auth')
+Route.put('/sells/:id', 'SellController.editSell').middleware('auth').validator('SellValidator/ValidateSell')
 Route.delete('/sells/:id', 'SellController.deleteSell').middleware('auth')
+Route.get('/sells/invoice/:id', 'SellController.createInvoice').middleware('auth')
+
+/* Dashboard Routes */
+
+Route.get('/dashboard/categoryCount', 'DashboardController.categoryCount').middleware('auth')
+Route.get('/dashboard/productsCount', 'DashboardController.productsCount').middleware('auth')
+Route.get('/dashboard/sellCount', 'DashboardController.sellCount').middleware('auth')
+Route.get('/dashboard/complaintCount', 'DashboardController.complaintCount').middleware('auth')
+
 
 
 

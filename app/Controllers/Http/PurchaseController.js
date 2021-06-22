@@ -14,29 +14,14 @@ const { validateAll } = use("Validator");
 class PurchaseController {
   async createPurchase({ request, response }) {
     try {
-      const rules = {
-        productName : "required|string|max:30",
-        productImage : "required|string|max:5mb",
-        brandName : "required|string|max:20",
-        productPrice : "required|number|max:10",
-        discountPrice : "required|number|max:10",
-        stockByStore : "required|array",
-        category_id: "required|string|max:100",
-        subCategory_id : "required|string|max:100"
-        };
-        const validation = await validateAll(request.all(), rules);
-        if (validation.fails()) {
-          return response.status(400).send(validation.messages());
-        }
-
       // const purchase = await Purchase.create(request.all());
       const purchase = new Purchase();
-      purchase.sellerName = sellerName;
-      purchase.sellerContact = sellerContact;
-      purchase.purchaseDescription = purchaseDescription;
-      purchase.billAmount = billAmount;
-      purchase.paidAmount = paidAmount;
-      purchase.billImage= billImage;
+      purchase.sellerName = request.input('sellerName');
+      purchase.sellerContact = request.input('sellerContact');
+      purchase.purchaseDescription = request.input('purchaseDescription');
+      purchase.billAmount = request.input('billAmount');
+      purchase.paidAmount = request.input('paidAmount');
+      purchase.billImage= request.input('billImage');
       await purchase.save();
       return response.status(201).json({
         message: `purchaseRecord of  ${purchase.sellerName} is Created Successfully`,

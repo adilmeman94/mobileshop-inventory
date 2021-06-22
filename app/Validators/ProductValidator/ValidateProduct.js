@@ -7,26 +7,25 @@ class ValidateComplaint {
   }
 
   get rules() {
+
+
+
     return {
 
-        productName : "required|string|min:4|max:30|unique:products,productName",
+        productName : `required|string|max:30`,
         productImage : "required|string|max:5mb",
-        brandName : "required|string|min:4|max:20",
-        productPrice : "required|number|min:1|max:10",
-        discountPrice : "required|number|min:1|max:10",
+        brandName : "required|string|max:20",
+        productPrice : "required|number|max:10",
+        discountPrice : "required|number|max:10",
         stockByStore : "required|array",
-        category_id: "required|string|min:4|max:100",
-        subCategory_id : "required|string|min:4|max:100"
+        category_id: "required|string|max:100",
+        subCategory_id : "required|string|max:100"
 
     };
 
   }
 
-  get messages() {
-    return {
-      "productName.unique": "product is already registered",
-    };
-  }
+
 
 }
 

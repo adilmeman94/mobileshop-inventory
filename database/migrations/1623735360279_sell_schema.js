@@ -10,8 +10,9 @@ class SellSchema extends Schema {
       table.string('sellDate').notNullable()
       table.string('customerName').notNullable()
       table.string('customerMobile').notNullable()
-      table.object('productDetail').notNullable()
+      table.json('productDetail').notNullable()
       table.string('billAmount').notNullable()
+      table.string('storeId').notNullable()
       table.timestamps()
     })
   }

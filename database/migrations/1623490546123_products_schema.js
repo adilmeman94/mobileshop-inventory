@@ -14,7 +14,7 @@ class ProductsSchema extends Schema {
       table.string('discountPrice').notNullable()
       table.json('stockByStore').notNullable()
       table.string('category_id').unsigned().references('_id').inTable('categories')
-      table.string('stockByStore[0].storeId').unsigned().references('_id').inTable('stores')
+      table.string('stockByStore[*].storeId').unsigned().references('_id').inTable('stores')
       table.timestamps()
     })
   }

@@ -7,21 +7,23 @@ class ValidateStore {
   }
 
   get rules() {
+
+
     return {
-      storeName : "required|string|min:5|max:15|unique:stores,storeName",
-      storeAddress : "required|string|min:3|max:100",
-      storeManagerName : "required|string|min:3|max:30",
-      storeMobile : "required|array",
+      storeName : `required|string|max:50`,
+      storeAddress : "required|string|max:100",
+      storeManagerName : "required|string|max:30",
+      storeMobile : "required|array|max:5",
       storeStatus : "required|boolean",
       storeLogo : "string|max:5mb"
     };
 
   }
-  get messages() {
-    return {
-      "storeName.unique": "store is already registered",
-    };
-  }
+  // get messages() {
+  //   return {
+  //     "storeName.unique": "store is already registered",
+  //   };
+  // }
 
 }
 

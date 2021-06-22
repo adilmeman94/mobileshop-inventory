@@ -11,14 +11,22 @@ class CategoryController {
     try {
       const { name, description, icon, parent_id } = request.all();
 
-      if (parent_id) {
-        const categoryInstance = await Category.findBy("_id", parent_id);
-      if (!categoryInstance) {
+      const categoryExists = await Category.findBy("name", name);
+      if (categoryExists) {
         return response.status(400).send({
           status: "error",
-          message: `Invalid parent ID`,
+          message: `category was already registered, create with another name`,
         });
       }
+
+      if (parent_id) {
+        const categoryInstance = await Category.findBy("_id", parent_id);
+        if (!categoryInstance) {
+          return response.status(400).send({
+            status: "error",
+            message: `Invalid parent ID`,
+          });
+        }
       }
       const category = new Category();
       category.name = name;
@@ -42,8 +50,8 @@ class CategoryController {
   async listCategory({ request, response }) {
     try {
       const { parent_id } = request.get();
-      const categories = Category.query().where('parent_id', parent_id)
-      return await categories.fetch()
+      const categories =  Category.query().where("parent_id", parent_id);
+      return await categories.fetch();
     } catch (error) {
       console.log(error.message);
       response.status(403).json({
@@ -68,7 +76,6 @@ class CategoryController {
 
   async editCategory({ request, response, params }) {
     try {
-
       const id = params.id;
       const category = await Category.findBy("_id", id);
       if (!category) {
@@ -77,21 +84,12 @@ class CategoryController {
           message: `category is not exist`,
         });
       }
-      if (parent_id) {
-        const categoryInstance = await Category.findBy("_id", parent_id);
-      if (!categoryInstance) {
-        return response.status(400).send({
-          status: "error",
-          message: `Invalid parent ID`,
-        });
-      }
-      }
 
       const { name, description, icon, parent_id } = request.all();
       category.name = name;
       category.description = description;
       category.icon = icon;
-      category.parent_id = parent_id
+      category.parent_id = parent_id;
       await category.save();
       return response.status(200).send(category);
     } catch (error) {

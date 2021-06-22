@@ -10,10 +10,16 @@ class Product extends Model {
   }
 
   stores () {
-    return this.hasMany('App/Models/Store')
+    return this.referMany('App/Models/Store', '_id', 'stockByStore[*].storeId')
   }
 
+  // stores () {
+  //   return this.referMany('App/Models/Store', '_id', stockByStore.forEach(function(storId){"_id";"storId"}))
+  // }
 
+  store_products () {
+    return this.hasMany('App/Models/StoreProduct', '_id', 'stockByStore[*].storeId')
+  }
 
 }
 
