@@ -75,7 +75,7 @@ class PurchaseController {
         });
       }
 
-      const {  sellerName , sellerContact, purchaseDescription , billAmount, paidAmount, billImage} = request.all();
+      const {sellerName , sellerContact, purchaseDescription , billAmount, paidAmount, billImage} = request.all();
 
       purchase.sellerName = sellerName;
       purchase.sellerContact = sellerContact;

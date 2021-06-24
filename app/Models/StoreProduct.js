@@ -4,13 +4,13 @@
 const Model = use('Model')
 
 class StoreProduct extends Model {
-  stores() {
-    return this.hasOne('App/Models/Store')
-  }
+//   stores() {
+//     return this.hasOne('App/Models/Store')
+//   }
 
   products() {
-    return this.hasOne('App/Models/Product')
+    return this.hasMany('App/Models/Product', "productId", '_id')
   }
-}
+ }
 
 module.exports = StoreProduct

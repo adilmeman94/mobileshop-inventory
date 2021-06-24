@@ -12,7 +12,7 @@ class PurchaseSchema extends Schema {
       table.string('sellerContact').notNullable()
       table.string('purchaseDescription').notNullable()
       table.string('billAmount').notNullable()
-      table.string('paidInput').notNullable()
+      table.string('paidAmount').notNullable()
       table.string('billImage').nullable()
       table.timestamps()
     })

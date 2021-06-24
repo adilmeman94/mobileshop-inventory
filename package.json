@@ -29,6 +29,7 @@
     "@adonisjs/shield": "^1.0.8",
     "@adonisjs/validator": "^5.1.0",
     "adonis-lucid-filter": "^3.0.0",
+    "adonis-spreadsheet": "^1.0.1",
     "lucid-mongo": "^3.1.6",
     "moment": "^2.29.1"
   },

@@ -6,7 +6,7 @@ const Model = use('Model')
 class Store extends Model {
 
   products () {
-    return this.belongsToMany('App/Models/Product').pivotTable('store_products')
+    return this.belongsToMany('App/Models/Product').pivotTable('store_products').withTimestamps()
   }
 }
 

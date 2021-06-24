@@ -9,16 +9,16 @@ class Product extends Model {
     return this.belongsTo('App/Models/Category')
   }
 
-  stores () {
-    return this.referMany('App/Models/Store', '_id', 'stockByStore[*].storeId')
-  }
+  // stores () {
+  //   return this.referMany('App/Models/Store', '_id', 'stockByStore[*].storeId')
+  // }
 
   // stores () {
   //   return this.referMany('App/Models/Store', '_id', stockByStore.forEach(function(storId){"_id";"storId"}))
   // }
 
   store_products () {
-    return this.hasMany('App/Models/StoreProduct', '_id', 'stockByStore[*].storeId')
+    return this.hasMany('App/Models/StoreProduct', '_id', 'productId',)
   }
 
 }

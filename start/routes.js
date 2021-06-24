@@ -77,10 +77,19 @@ Route.get('/sells/invoice/:id', 'SellController.createInvoice').middleware('auth
 
 /* Dashboard Routes */
 
-Route.get('/dashboard/categoryCount', 'DashboardController.categoryCount').middleware('auth')
+// Route.get('/dashboard/categoryCount', 'DashboardController.categoryCount').middleware('auth')
 Route.get('/dashboard/productsCount', 'DashboardController.productsCount').middleware('auth')
 Route.get('/dashboard/sellCount', 'DashboardController.sellCount').middleware('auth')
 Route.get('/dashboard/complaintCount', 'DashboardController.complaintCount').middleware('auth')
+Route.get('/dashboard/purchaseCount', 'DashboardController.purchaseCount').middleware('auth')
+
+/* report routes */
+
+Route.get('/reports/purchaseReport/:format', 'ReportController.purchaseReport').middleware('auth')
+Route.get('/reports/sellReport/:format', 'ReportController.sellReport').middleware('auth')
+Route.get('/reports/complaintReport/:format', 'ReportController.complaintReport').middleware('auth')
+Route.get('/reports/productReport/:format', 'ReportController.productReport').middleware('auth')
+
 
 
 

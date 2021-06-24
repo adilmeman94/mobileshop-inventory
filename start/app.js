@@ -22,6 +22,8 @@ const providers = [
   '@adonisjs/validator/providers/ValidatorProvider',
   'lucid-mongo/providers/LucidMongoProvider',
   '@adonisjs/mail/providers/MailProvider',
+  'adonis-spreadsheet/providers/SpreadSheetProvider',
+
 
 
 ]

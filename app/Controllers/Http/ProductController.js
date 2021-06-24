@@ -1,6 +1,7 @@
 "use strict";
 
 const Products = use("App/Models/Product");
+const StoreProduct = use("App/Models/StoreProduct");
 const Store = use("App/Models/Store");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
@@ -16,17 +17,21 @@ class ProductController {
       productImage,
       brandName,
       productPrice,
-      discountPrice,
+      discountPercentage,
+      finalPrice,
       stockByStore,
       category_id,
       subCategory_id,
     } = request.all();
     try {
       const productExists = await Products.findBy("productName", productName);
+      // const productExists =  Products.where({'productName': productName, 'stockByStore.storeId': stockByStore.storeId});
+      // const exist = await productExists.first()
+      // console.log(exist);
       if (productExists) {
         return response.status(400).send({
           status: "error",
-          message: `product was already registered, create with another name`,
+          message: `product was already exist, create with another name`,
         });
       }
       const product = new Products();
@@ -34,11 +39,20 @@ class ProductController {
       product.productImage = productImage;
       product.brandName = brandName;
       product.productPrice = productPrice;
-      product.discountPrice = discountPrice;
+      product.discountPercentage = discountPercentage;
+      product.finalPrice = finalPrice;
       product.stockByStore = stockByStore;
       product.category_id = category_id;
       product.subCategory_id = subCategory_id;
       await product.save();
+
+      // const stockByStore = request.input('stockByStore')
+      for (const IdStock of stockByStore) {
+        const storeProduct = new StoreProduct();
+        storeProduct.productId = product._id;
+        storeProduct.IdStock = IdStock;
+        await storeProduct.save();
+      }
 
       // const product = await Products.create(request.all());
       return response.status(201).json({
@@ -56,43 +70,55 @@ class ProductController {
 
   async listProducts({ request, response }) {
     try {
-      // const filters = request.query;
-      // const filteredProducts = Products.filter()
-      // const categories = await Category.query().where("parent_id", parent_id).fetch();
+      const { category_id, subCategory_id, productName, store_id } =
+        request.get();
+      const page = request.get().page || 1;
+      const limit = request.get().limit || 10;
 
+      // const products = Products.query();
+      // if (productName) {
+      //   products.where("productName",  productName);
+      // }
+      // if (category_id) {
+      //   products.where("category_id", category_id);
+      // }
+      // if (subCategory_id) {
+      //   products.where("subCategory_id", subCategory_id);
+      // }
 
-       const { category_id, subCategory_id, productName ,store_id}= request.get();
+      // // const products1 = await products.with("store_products", query => {query.where("IdStock.storeId", store_id)}).paginate(page, limit);
+      // const products1= await products.with("categories").paginate(page, limit)
+      // const productList = products1.toJSON();
+      // for (const element of productList.data) {
+      //   const stores1 = [];
+      //   for (const item of element.stockByStore) {
+      //     let store = await Store.findBy("_id", item.storeId);
+      //     stores1.push({ store, stock: item.stock });
+      //     element.stores1 = stores1;
+      //   }
+      // }
+      const storeProduct = StoreProduct.query();
 
-        const products = Products.query()
-        if (productName) {
-          products.where('productName', productName)
-        }
-        if (category_id) {
-          products.where('category_id', category_id)
-        }
-        if (subCategory_id) {
-          products.where('subCategory_id', subCategory_id)
-        }
-        if (store_id) {
-          products.where();
-         }
-
-        //  const products1 = await products.with('categories').with('stores').with("store_products").fetch()
-
-      const products1= await products.with("categories").with("store_products", query=>{
-        query.where({store_id: 'stockByStore[*].storeId'})
-      }).fetch();
-      const productList = products1.toJSON();
-
-      for (const element of productList) {
-        const stores1 = []
-        for (const item of element.stockByStore) {
-          let store = await Store.findBy("_id", item.storeId);
-           stores1.push({store, stock: item.stock});
-           element.stores1 = stores1
-        }
+      if (store_id) {
+        storeProduct.where("IdStock.storeId", store_id);
       }
-      return productList;
+      // if (productName) {
+      //   products.where("productName", LIKE, productName);
+      // }
+      let queryObject = {};
+      if (productName) {
+        queryObject.productName =  productName;
+      }
+      if (category_id) {
+        queryObject.category_id = category_id;
+      }
+      if (subCategory_id) {
+        queryObject.subCategory_id = subCategory_id;
+      }
+
+      const storeproducts1 = await storeProduct.with("products", query => { query.where(queryObject)}).paginate(page, limit);
+      const productList = storeproducts1.toJSON();
+      return productList.data;
     } catch (error) {
       response.status(403).json({
         status: "error",
@@ -136,7 +162,8 @@ class ProductController {
         productImage,
         brandName,
         productPrice,
-        discountPrice,
+        discountPercentage,
+        finalPrice,
         stockByStore,
         category_id,
         subCategory_id,
@@ -146,7 +173,8 @@ class ProductController {
       product.productImage = productImage;
       product.brandName = brandName;
       product.productPrice = productPrice;
-      product.discountPrice = discountPrice;
+      product.discountPrice = discountPercentage;
+      product.finalPrice = finalPrice;
       product.stockByStore = stockByStore;
       product.category_id = category_id;
       product.subCategory_id = subCategory_id;
