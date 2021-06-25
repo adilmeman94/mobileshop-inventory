@@ -4,9 +4,9 @@
 const Model = use('Model')
 
 class StoreProduct extends Model {
-//   stores() {
-//     return this.hasOne('App/Models/Store')
-//   }
+  stores() {
+    return this.hasMany('App/Models/Store', "storeId", '_id')
+  }
 
   products() {
     return this.hasMany('App/Models/Product', "productId", '_id')

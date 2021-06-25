@@ -25,9 +25,6 @@ class ProductController {
     } = request.all();
     try {
       const productExists = await Products.findBy("productName", productName);
-      // const productExists =  Products.where({'productName': productName, 'stockByStore.storeId': stockByStore.storeId});
-      // const exist = await productExists.first()
-      // console.log(exist);
       if (productExists) {
         return response.status(400).send({
           status: "error",
@@ -41,16 +38,17 @@ class ProductController {
       product.productPrice = productPrice;
       product.discountPercentage = discountPercentage;
       product.finalPrice = finalPrice;
-      product.stockByStore = stockByStore;
+      // product.stockByStore = stockByStore;
       product.category_id = category_id;
       product.subCategory_id = subCategory_id;
       await product.save();
 
       // const stockByStore = request.input('stockByStore')
-      for (const IdStock of stockByStore) {
+      for (const item of stockByStore) {
         const storeProduct = new StoreProduct();
-        storeProduct.productId = product._id;
-        storeProduct.IdStock = IdStock;
+        storeProduct.productId = String(product._id);
+        storeProduct.storeId = item.storeId;
+        storeProduct.stock = item.stock;
         await storeProduct.save();
       }
 
@@ -75,6 +73,7 @@ class ProductController {
       const page = request.get().page || 1;
       const limit = request.get().limit || 10;
 
+      /* logic of products list when search from Product model */
       // const products = Products.query();
       // if (productName) {
       //   products.where("productName",  productName);
@@ -85,7 +84,6 @@ class ProductController {
       // if (subCategory_id) {
       //   products.where("subCategory_id", subCategory_id);
       // }
-
       // // const products1 = await products.with("store_products", query => {query.where("IdStock.storeId", store_id)}).paginate(page, limit);
       // const products1= await products.with("categories").paginate(page, limit)
       // const productList = products1.toJSON();
@@ -97,17 +95,15 @@ class ProductController {
       //     element.stores1 = stores1;
       //   }
       // }
-      const storeProduct = StoreProduct.query();
 
+      /* logic of products list when search from Product model */
+      const storeProduct = StoreProduct.query();
       if (store_id) {
-        storeProduct.where("IdStock.storeId", store_id);
+        storeProduct.where("storeId", store_id);
       }
-      // if (productName) {
-      //   products.where("productName", LIKE, productName);
-      // }
       let queryObject = {};
       if (productName) {
-        queryObject.productName =  productName;
+        queryObject.productName = productName;
       }
       if (category_id) {
         queryObject.category_id = category_id;
@@ -115,8 +111,11 @@ class ProductController {
       if (subCategory_id) {
         queryObject.subCategory_id = subCategory_id;
       }
-
-      const storeproducts1 = await storeProduct.with("products", query => { query.where(queryObject)}).paginate(page, limit);
+      const storeproducts1 = await storeProduct
+        .with("products", (query) => {
+          query.where(queryObject);
+        })
+        .paginate(page, limit);
       const productList = storeproducts1.toJSON();
       return productList.data;
     } catch (error) {
@@ -129,27 +128,30 @@ class ProductController {
 
   async productById({ request, response, params }) {
     const id = params.id;
-    const product = await Products.findBy("_id", id);
+    const storeProduct = await StoreProduct.findBy("_id", id);
+    const product = await storeProduct.products().fetch();
     if (!product) {
       return response.status(400).send({
         status: "error",
         message: `product is not exist`,
       });
     }
-    const product1 = product.toJSON();
-    const stores = [];
-    for (const item of product1.stockByStore) {
-      let store = await Store.findBy("_id", item.storeId);
-      stores.push(store);
-    }
-    product.stores = stores;
-    return product;
+    // const product1 = product.toJSON();
+    // const stores = [];
+    // for (const item of product1.stockByStore) {
+    //   let store = await Store.findBy("_id", item.storeId);
+    //   stores.push(store);
+    // }
+    // product.stores = stores;
+    return { storeProduct, product };
   }
 
   async editProduct({ request, response, params }) {
     try {
       const id = params.id;
-      const product = await Products.findBy("_id", id);
+      const storeProduct = await StoreProduct.findBy("_id", id);
+      const product = await storeProduct.products().fetch();
+      // const product = await Products.findBy("_id", id);
       if (!product) {
         return response.status(400).send({
           status: "error",
@@ -173,13 +175,19 @@ class ProductController {
       product.productImage = productImage;
       product.brandName = brandName;
       product.productPrice = productPrice;
-      product.discountPrice = discountPercentage;
+      product.discountPercentage = discountPercentage;
       product.finalPrice = finalPrice;
-      product.stockByStore = stockByStore;
+      // product.stockByStore = stockByStore;
       product.category_id = category_id;
       product.subCategory_id = subCategory_id;
-
       await product.save();
+
+      for (const item of stockByStore) {
+        storeProduct.productId = storeProduct.productId;
+        storeProduct.storeId = item.storeId;
+        storeProduct.stock = item.stock;
+        await storeProduct.save();
+      }
       return response.status(200).send(product);
     } catch (error) {
       return response.status(400).send({
@@ -192,15 +200,23 @@ class ProductController {
   async deleteProduct({ request, response, params }) {
     try {
       const id = params.id;
-      const product = await Products.findBy("_id", id);
+      const storeProduct = await StoreProduct.findBy("_id", id);
+      const product = await storeProduct.products().fetch();
+      if (!product) {
+        return response.status(400).send({
+          status: "error",
+          message: `product is not exist`,
+        });
+      }
       await product.delete();
+
       return response.status(201).json({
         message: `product ${product.productName} is deleted Successfull`,
       });
     } catch (error) {
       response.status(400).send({
         status: "error",
-        message: `product is not exist`,
+        message: error.message,
       });
     }
   }

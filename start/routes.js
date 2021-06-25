@@ -89,6 +89,7 @@ Route.get('/reports/purchaseReport/:format', 'ReportController.purchaseReport').
 Route.get('/reports/sellReport/:format', 'ReportController.sellReport').middleware('auth')
 Route.get('/reports/complaintReport/:format', 'ReportController.complaintReport').middleware('auth')
 Route.get('/reports/productReport/:format', 'ReportController.productReport').middleware('auth')
+Route.get('/reports/stockReport/:format', 'ReportController.stockReport')
 
 
 

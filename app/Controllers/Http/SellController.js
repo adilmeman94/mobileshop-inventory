@@ -2,7 +2,7 @@
 
 const Sell = use("App/Models/Sell");
 const Products = use("App/Models/Product");
-// const StoreProduct = use("App/Models/StoreProduct")
+const StoreProduct = use("App/Models/StoreProduct");
 const Store = use("App/Models/Store");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
@@ -32,16 +32,28 @@ class SellController {
       sell.storeId = storeId;
       await sell.save();
 
-      for (const element of productDetail) {
-        const product = await Products.findBy("_id", element.productId);
-        const product1 = product.toJSON();
-        for (const item of product1.stockByStore) {
-          if (storeId === item.storeId) {
-            item.stock = item.stock - element.productQty;
-            await product.save();
-          }
-        }
+      /* logic for stock decrement when stock is maintained by Product model*/
+
+      // for (const element of productDetail) {
+      //   const product = await Products.findBy("_id", element.productId);
+      //   const product1 = product.toJSON();
+      //   for (const item of product1.stockByStore) {
+      //     if (storeId === item.storeId) {
+      //       item.stock = item.stock - element.productQty;
+      //       await product.save();
+      //     }
+      //   }
+      // }
+
+      /* logic for stock decrement when stock is maintained by storeProduct model*/
+
+       for (const element of productDetail) {
+      const storeproduct = await StoreProduct.where({"productId" : element.productId, "storeId": storeId}).first();
+      storeproduct.stock = storeproduct.stock - element.productQty
+      await storeproduct.save();
       }
+
+      /* logic for stock decrement when stock is maintained by storeProduct model with loop of IdStock*/
 
       // for (const element of productDetail) {
       //   const storeproduct = await StoreProduct.findBy("productId", element.productId)
@@ -59,7 +71,6 @@ class SellController {
         data: sell,
       });
     } catch (error) {
-      console.log(error.message);
       response.status(403).json({
         status: "error",
         debug_error: error.message,

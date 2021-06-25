@@ -4,6 +4,7 @@ const Purchase = use("App/Models/Purchase");
 const Sell = use("App/Models/Sell");
 const Complaint = use('App/Models/Complaint');
 const Product = use("App/Models/Product");
+const StoreProduct = use("App/Models/StoreProduct");
 const SpreadSheet = use("SpreadSheet");
 const moment = use("moment");
 
@@ -191,7 +192,43 @@ class ReportController {
     ss.download("product-export");
   }
 
+  async stockReport({ request, response, params }) {
+    const ss = new SpreadSheet(response, params.format);
+    const { storeId, productId } = request.get();
 
+    const storeproduct = StoreProduct.query();
+    if (storeId) {
+      storeproduct.where("storeId" , storeId);
+    }
+    if (productId) {
+      storeproduct.where("productId" , productId);
+    }
+
+    const storeProduct = await storeproduct.with("products").with("stores").fetch();
+    // console.log(storeProduct.toJSON())
+    const data = [];
+
+    data.push([
+      "id",
+      "Date",
+      "Product Name",
+      "Store Name",
+      "Stock Detail"
+    ]);
+
+    storeProduct.toJSON().forEach((product) => {
+      data.push([
+        product._id,
+        moment(product.created_at).format("DD-MM-YYYY, hh:mm:ss"),
+        product.products.map(item =>  item.productName),
+        product.stores.map(item => item.storeName),
+        product.stock
+      ]);
+    });
+
+    ss.addSheet("stockProduct", data);
+    ss.download("stock-export");
+  }
 }
 
 module.exports = ReportController;
